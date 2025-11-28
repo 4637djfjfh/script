@@ -1,0 +1,48 @@
+-- Noclip Toggle GUI (แก้ไขแล้ว: OFF = กลับมาชนกำแพง)
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+ToggleButton.Parent = ScreenGui
+ToggleButton.Text = "Noclip: OFF"
+ToggleButton.Size = UDim2.new(0, 200, 0, 50)
+ToggleButton.Position = UDim2.new(0.4, 0, 0.1, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 24
+ToggleButton.Draggable = true
+
+-- ตัวแปรเปิด/ปิด
+getgenv().NoclipEnabled = false
+
+-- ฟังก์ชัน Toggle
+ToggleButton.MouseButton1Click:Connect(function()
+    getgenv().NoclipEnabled = not getgenv().NoclipEnabled
+    if getgenv().NoclipEnabled then
+        ToggleButton.Text = "Noclip: ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        ToggleButton.Text = "Noclip: OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+        -- คืนค่า CanCollide = true ตอนปิด
+        if game.Players.LocalPlayer.Character then
+            for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+-- Loop Noclip
+game:GetService("RunService").Stepped:Connect(function()
+    if getgenv().NoclipEnabled and game.Players.LocalPlayer.Character then
+        for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
