@@ -1,6 +1,7 @@
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local Noclip = Instance.new("ScreenGui")
 local BG = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -9,9 +10,11 @@ local StatusPF = Instance.new("TextLabel")
 local Status = Instance.new("TextLabel")
 local Plr = Players.LocalPlayer
 local Clipon = false
+local SteppedConnection = nil
+local OriginalCanCollide = setmetatable({}, { __mode = "k" })
 
 Noclip.Name = "Noclip"
-Noclip.Parent = game.CoreGui
+Noclip.Parent = CoreGui
 
 BG.Name = "BG"
 BG.Parent = Noclip
@@ -83,26 +86,66 @@ Status.TextWrapped = true
 Status.TextXAlignment = Enum.TextXAlignment.Left
 
 
-Toggle.MouseButton1Click:connect(function()
-    if Status.Text == "off" then
-        Clipon = true
-        Status.Text = "on"
-        Status.TextColor3 = Color3.new(0,185,0)
-        Stepped = game:GetService("RunService").Stepped:Connect(function()
-            if not Clipon == false then
-                for a, b in pairs(Workspace:GetChildren()) do
-                if b.Name == Plr.Name then
-                for i, v in pairs(Workspace[Plr.Name]:GetChildren()) do
-                if v:IsA("BasePart") then
-                v.CanCollide = false
-                end end end end
-            else
-                Stepped:Disconnect()
+local function getCharacter()
+    return Plr.Character or Workspace:FindFirstChild(Plr.Name)
+end
+
+local function setNoclipCollisions(enabled)
+    local character = getCharacter()
+    if not character then
+        return
+    end
+
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if enabled then
+                if OriginalCanCollide[part] == nil then
+                    OriginalCanCollide[part] = part.CanCollide
+                end
+                part.CanCollide = false
+            elseif OriginalCanCollide[part] ~= nil then
+                part.CanCollide = OriginalCanCollide[part]
+                OriginalCanCollide[part] = nil
             end
-        end)
+        end
+    end
+end
+
+local function stopNoclip()
+    Clipon = false
+
+    if SteppedConnection then
+        SteppedConnection:Disconnect()
+        SteppedConnection = nil
+    end
+
+    setNoclipCollisions(false)
+end
+
+local function startNoclip()
+    Clipon = true
+
+    if SteppedConnection then
+        SteppedConnection:Disconnect()
+    end
+
+    SteppedConnection = RunService.Stepped:Connect(function()
+        if Clipon then
+            setNoclipCollisions(true)
+        else
+            stopNoclip()
+        end
+    end)
+end
+
+Toggle.MouseButton1Click:Connect(function()
+    if Status.Text == "off" then
+        startNoclip()
+        Status.Text = "on"
+        Status.TextColor3 = Color3.fromRGB(0, 185, 0)
     elseif Status.Text == "on" then
-        Clipon = false
+        stopNoclip()
         Status.Text = "off"
-        Status.TextColor3 = Color3.new(170,0,0)
+        Status.TextColor3 = Color3.fromRGB(170, 0, 0)
     end
 end)
