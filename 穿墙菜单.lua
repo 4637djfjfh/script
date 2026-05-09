@@ -6,12 +6,18 @@ local Noclip = Instance.new("ScreenGui")
 local BG = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local Toggle = Instance.new("TextButton")
+local EnlargeButton = Instance.new("TextButton")
+local ShrinkButton = Instance.new("TextButton")
+local UIScale = Instance.new("UIScale")
 local StatusPF = Instance.new("TextLabel")
 local Status = Instance.new("TextLabel")
 local Plr = Players.LocalPlayer
 local Clipon = false
 local SteppedConnection = nil
 local OriginalCanCollide = setmetatable({}, { __mode = "k" })
+local UiScaleStep = 0.1
+local MinUiScale = 0.75
+local MaxUiScale = 1.5
 
 Noclip.Name = "Noclip"
 Noclip.Parent = CoreGui
@@ -25,6 +31,10 @@ BG.Position = UDim2.new(0.149479166, 0, 0.82087779, 0)
 BG.Size = UDim2.new(0, 210, 0, 127)
 BG.Active = true
 BG.Draggable = true
+
+UIScale.Name = "UIScale"
+UIScale.Parent = BG
+UIScale.Scale = 1
 
 Title.Name = "Title"
 Title.Parent = BG
@@ -53,6 +63,36 @@ Toggle.TextColor3 = Color3.new(1, 1, 1)
 Toggle.TextSize = 25
 Toggle.TextStrokeColor3 = Color3.new(0.180392, 0, 0.431373)
 Toggle.TextStrokeTransparency = 0
+
+ShrinkButton.Name = "ShrinkButton"
+ShrinkButton.Parent = BG
+ShrinkButton.BackgroundColor3 = Color3.new(0.266667, 0.00392157, 0.627451)
+ShrinkButton.BorderColor3 = Color3.new(0.180392, 0, 0.431373)
+ShrinkButton.BorderSizePixel = 2
+ShrinkButton.Position = UDim2.new(1, -58, 0, 4)
+ShrinkButton.Size = UDim2.new(0, 24, 0, 24)
+ShrinkButton.Font = Enum.Font.Highway
+ShrinkButton.FontSize = Enum.FontSize.Size24
+ShrinkButton.Text = "-"
+ShrinkButton.TextColor3 = Color3.new(1, 1, 1)
+ShrinkButton.TextSize = 20
+ShrinkButton.TextStrokeColor3 = Color3.new(0.180392, 0, 0.431373)
+ShrinkButton.TextStrokeTransparency = 0
+
+EnlargeButton.Name = "EnlargeButton"
+EnlargeButton.Parent = BG
+EnlargeButton.BackgroundColor3 = Color3.new(0.266667, 0.00392157, 0.627451)
+EnlargeButton.BorderColor3 = Color3.new(0.180392, 0, 0.431373)
+EnlargeButton.BorderSizePixel = 2
+EnlargeButton.Position = UDim2.new(1, -29, 0, 4)
+EnlargeButton.Size = UDim2.new(0, 24, 0, 24)
+EnlargeButton.Font = Enum.Font.Highway
+EnlargeButton.FontSize = Enum.FontSize.Size24
+EnlargeButton.Text = "+"
+EnlargeButton.TextColor3 = Color3.new(1, 1, 1)
+EnlargeButton.TextSize = 20
+EnlargeButton.TextStrokeColor3 = Color3.new(0.180392, 0, 0.431373)
+EnlargeButton.TextStrokeTransparency = 0
 
 StatusPF.Name = "StatusPF"
 StatusPF.Parent = BG
@@ -137,6 +177,18 @@ local function startNoclip()
         end
     end)
 end
+
+local function setUiScale(delta)
+    UIScale.Scale = math.clamp(UIScale.Scale + delta, MinUiScale, MaxUiScale)
+end
+
+ShrinkButton.MouseButton1Click:Connect(function()
+    setUiScale(-UiScaleStep)
+end)
+
+EnlargeButton.MouseButton1Click:Connect(function()
+    setUiScale(UiScaleStep)
+end)
 
 Toggle.MouseButton1Click:Connect(function()
     if Status.Text == "off" then
