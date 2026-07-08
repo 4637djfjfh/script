@@ -163,6 +163,8 @@ local bodyGyro = nil
 local bodyVelocity = nil
 local upHolding = false
 local downHolding = false
+local upLoopRunning = false
+local downLoopRunning = false
 
 pcall(function()
 	StarterGui:SetCore("SendNotification", {
@@ -239,6 +241,11 @@ end
 
 local function stopTPWalk()
 	tpwalking = false
+end
+
+local function stopVerticalMovement()
+	upHolding = false
+	downHolding = false
 end
 
 local function startFly()
@@ -383,14 +390,19 @@ end)
 up.MouseButton1Down:Connect(function()
 	upHolding = true
 
+	if upLoopRunning then return end
+	upLoopRunning = true
+
 	task.spawn(function()
-		while upHolding do
+		while upHolding and main.Parent do
 			task.wait()
 			local rootPart = getRootPart()
 			if rootPart then
 				rootPart.CFrame = rootPart.CFrame * CFrame.new(0, 1, 0)
 			end
 		end
+
+		upLoopRunning = false
 	end)
 end)
 
@@ -405,14 +417,19 @@ end)
 down.MouseButton1Down:Connect(function()
 	downHolding = true
 
+	if downLoopRunning then return end
+	downLoopRunning = true
+
 	task.spawn(function()
-		while downHolding do
+		while downHolding and main.Parent do
 			task.wait()
 			local rootPart = getRootPart()
 			if rootPart then
 				rootPart.CFrame = rootPart.CFrame * CFrame.new(0, -1, 0)
 			end
 		end
+
+		downLoopRunning = false
 	end)
 end)
 
@@ -427,6 +444,7 @@ end)
 player.CharacterAdded:Connect(function()
 	task.wait(0.7)
 
+	stopVerticalMovement()
 	stopTPWalk()
 
 	local character = getCharacter()
@@ -447,6 +465,7 @@ player.CharacterAdded:Connect(function()
 end)
 
 closebutton.MouseButton1Click:Connect(function()
+	stopVerticalMovement()
 	stopFly()
 	main:Destroy()
 end)
